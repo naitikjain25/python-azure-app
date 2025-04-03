@@ -19,19 +19,20 @@ pipeline {
                 bat '"C:\\Users\\NAITIK JAIN\\AppData\\Local\\Programs\\Python\\Python312\\python.exe" -m venv venv'
                 bat '.\\venv\\Scripts\\activate && .\\venv\\Scripts\\python.exe -m pip install --upgrade pip'
                 bat '.\\venv\\Scripts\\activate && .\\venv\\Scripts\\python.exe -m pip install -r requirements.txt'
+                bat '.\\venv\\Scripts\\activate && .\\venv\\Scripts\\python.exe -m pip install pytest' // Ensure pytest is installed
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat '.\\venv\\Scripts\\activate && pytest' // If you have tests
+                bat '.\\venv\\Scripts\\activate && .\\venv\\Scripts\\python.exe -m pytest' // Run tests properly
             }
         }
 
         stage('Deploy to Azure') {
             steps {
                 bat 'az login --service-principal -u "your-client-id" -p "your-client-secret" --tenant "your-tenant-id"'
-                bat 'az webapp up --name %AZURE_APP_NAME% --resource-group %AZURE_RESOURCE_GROUP% --runtime "PYTHON:3.10"'
+                bat 'az webapp up --name %AZURE_APP_NAME% --resource-group %AZURE_RESOURCE_GROUP% --runtime "PYTHON|3.12"'
             }
         }
     }
