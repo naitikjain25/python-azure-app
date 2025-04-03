@@ -1,9 +1,10 @@
 pipeline {
     agent any
+
     environment {
-        AZURE_CREDENTIALS_ID = 'azure-service-principal'
-        RESOURCE_GROUP = 'rg-jenkins'
-        APP_SERVICE_NAME = 'webapijenkinsnaitik457'
+        AZURE_APP_NAME = "your-azure-app-name"
+        AZURE_RESOURCE_GROUP = "your-resource-group"
+        AZURE_SUBSCRIPTION_ID = "your-subscription-id"
     }
 
     stages {
@@ -13,31 +14,34 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Set Up Python Environment') {
             steps {
-                bat 'dotnet restore'
-                bat 'dotnet build --configuration Release'
-                bat 'dotnet publish -c Release -o ./publish'
+                bat 'python -m venv venv'
+                bat '.\\venv\\Scripts\\activate && pip install --upgrade pip'
+                bat '.\\venv\\Scripts\\activate && pip install -r requirements.txt'
             }
         }
 
-        stage('Deploy') {
+        stage('Run Tests') {
             steps {
-                withCredentials([azureServicePrincipal(credentialsId: AZURE_CREDENTIALS_ID)]) {
-                    bat "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID"
-                    bat "powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force"
-                    bat "az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_SERVICE_NAME --src-path ./publish.zip --type zip"
-                }
+                bat '.\\venv\\Scripts\\activate && pytest' // If you have tests
+            }
+        }
+
+        stage('Deploy to Azure') {
+            steps {
+                bat 'az login --service-principal -u "your-client-id" -p "your-client-secret" --tenant "your-tenant-id"'
+                bat 'az webapp up --name %AZURE_APP_NAME% --resource-group %AZURE_RESOURCE_GROUP% --runtime "PYTHON:3.10"'
             }
         }
     }
 
     post {
-        success {
-            echo 'Deployment Successful!'
-        }
         failure {
             echo 'Deployment Failed!'
+        }
+        success {
+            echo 'Deployment Successful!'
         }
     }
 }
