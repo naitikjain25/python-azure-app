@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        AZURE_APP_NAME = "your-azure-app-name"
-        AZURE_RESOURCE_GROUP = "your-resource-group"
-        AZURE_SUBSCRIPTION_ID = "your-subscription-id"
+        AZURE_CREDENTIALS_ID = 'azure-service-principal'
+        RESOURCE_GROUP = 'rg-jenkins'
+        APP_SERVICE_NAME = 'webapijenkinsnaitik457'
     }
 
     stages {
