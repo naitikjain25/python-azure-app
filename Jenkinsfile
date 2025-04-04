@@ -32,19 +32,17 @@ pipeline {
         stage('Deploy') {
             steps {
                 withCredentials([azureServicePrincipal(credentialsId: AZURE_CREDENTIALS_ID)]) {
-                    bat "az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID"
-
-                    // ✅ Create publish folder and copy files
                     bat '''
                     if exist publish (rmdir /s /q publish)
                     mkdir publish
-                    xcopy /s /y *.py publish\\
-                    xcopy /s /y requirements.txt publish\\
-                    '''
 
-                    // ✅ Zip and deploy
-                    bat "powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force"
-                    bat "az webapp deploy --resource-group $RESOURCE_GROUP --name $APP_SERVICE_NAME --src-path ./publish.zip --type zip"
+                    :: Copy .py files and requirements.txt to publish folder
+                    for %%f in (*.py) do copy "%%f" publish\\
+                    if exist requirements.txt copy requirements.txt publish\\
+                    '''
+                    bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%'
+                    bat 'powershell Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip -Force'
+                    bat 'az webapp deploy --resource-group %RESOURCE_GROUP% --name %APP_SERVICE_NAME% --src-path ./publish.zip --type zip'
                 }
             }
         }
